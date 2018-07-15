@@ -15,6 +15,12 @@ class CreatePromotionsTable extends Migration
     {
         Schema::create('promotions', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('name');
+            $table->text('description');
+            $table->string('started_date');
+            $table->string('ended_date');
+            $table->boolean('actived');
+            $table->boolean('disposabled'); //True khi Code chi dung 1 lan
             $table->timestamps();
         });
     }

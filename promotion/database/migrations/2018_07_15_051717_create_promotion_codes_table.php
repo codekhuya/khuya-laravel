@@ -15,6 +15,12 @@ class CreatePromotionCodesTable extends Migration
     {
         Schema::create('promotion_codes', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('code');
+            $table->integer('value');
+            $table->string('type');
+            $table->boolean('actived');
+            $table->unsignedInteger('promotion_id');
+            $table->foreign('promotion_id')->references('id')->on('promotions')->onDelete('cascade');
             $table->timestamps();
         });
     }
