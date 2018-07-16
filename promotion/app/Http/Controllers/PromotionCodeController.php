@@ -14,7 +14,32 @@ class PromotionCodeController extends Controller
      */
     public function index()
     {
-        //
+        $keyword = request()->input('keyword');
+        $orderBy = request()->input('orderBy');
+        $typeSort = request()->input('typeSort');
+        $limit = request()->input('limit', 9);
+
+        $codeList = PromotionCode::
+            when($orderBy, function($query) use($orderBy, $typeSort)
+                {
+                    //Sap xep theo ten cot va kieu sap xep duoc truyen len
+                    $query->orderBy($orderBy, $typeSort);
+                }, function($query)
+                {
+                    //Neu ko co thi mac dinh sap theo id moi nhat
+                    $query->orderBy('id', 'desc');
+                })
+            ->when($keyword, function($query, $keyword)
+                {
+                    //Tim kiem theo keyword duoc truyen len
+                    $query->where('name', 'like', "%$keyword%")
+                        ->orWhere('actived', 'like', "%$keyword%")
+                        ->orWhere('value', 'like', "%$keyword%")
+                        ->orWhere('type', 'like', "%$keyword%");
+                })
+            ->paginate($limit);
+        
+        return response()->json($codeList);
     }
 
     /**
@@ -35,7 +60,7 @@ class PromotionCodeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
     }
 
     /**
