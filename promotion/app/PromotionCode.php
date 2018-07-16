@@ -15,7 +15,8 @@ class PromotionCode extends Model
 
     public static function codeGenerate($length = 9)
     {
-        $pool = strtoupper(str_random($length));
+        //Tao ra ma IN HOA, xoa khoang trang
+        $pool = str_replace(" ", '', strtoupper(str_random($length)));
         $existedCode = PromotionCode::where('code',$pool)->first();
         if($existedCode){
             //Neu trung thi goi lai
