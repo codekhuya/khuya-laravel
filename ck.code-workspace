@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "book-reviews-api"
+		},
+		{
+			"path": "promotion"
+		},
+		{
+			"path": "laradock"
+		}
+	],
+	"settings": {}
+}
