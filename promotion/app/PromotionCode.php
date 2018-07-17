@@ -13,15 +13,21 @@ class PromotionCode extends Model
         return $this->belongsTo(Promotion::class);
     }
 
-    public static function codeGenerate($length = 9)
+    public static function codeGenerate($length = 8, $value = null)
     {
-        //Tao ra ma IN HOA, xoa khoang trang
-        $pool = str_replace(" ", '', strtoupper(str_random($length)));
-        $existedCode = PromotionCode::where('code',$pool)->first();
-        if($existedCode){
-            //Neu trung thi goi lai
-            return $pool = PromotionCode::codeGenerate($length);
+        $pool = "";
+        if(is_null($value)){
+            //Tao ra ma IN HOA, xoa khoang trang
+            $pool = str_replace(" ", '', strtoupper(str_random($length)));
+            $existedCode = PromotionCode::where('code',$pool)->first();
+            if($existedCode){
+                //Neu code da ton tai thi tao lai ma khac
+                return $pool = PromotionCode::codeGenerate($length);
+            }
+            return $pool;
+        }else{
+            $pool = str_replace(" ", '', strtoupper($value));
+            return $pool;
         }
-        return $pool;
     }
 }
