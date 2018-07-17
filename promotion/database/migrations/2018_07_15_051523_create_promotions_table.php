@@ -17,10 +17,10 @@ class CreatePromotionsTable extends Migration
             $table->increments('id');
             $table->string('name')->unique();
             $table->text('description');
-            $table->string('started_date');
-            $table->string('ended_date');
+            $table->dateTime('started_date');
+            $table->dateTime('ended_date');
             $table->boolean('actived')->default(1);
-            $table->boolean('disposable'); //True khi Code chi dung 1 lan
+            $table->boolean('disposable')->default(0); //True khi Code chi dung 1 lan
             $table->integer('amount')->default(-1);
             $table->timestamps();
         });
