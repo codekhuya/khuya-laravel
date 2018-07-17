@@ -19,8 +19,11 @@ class PromotionCodeController extends Controller
         $typeSort = request()->input('typeSort');
         $limit = request()->input('limit', 9);
 
-        $codeList = PromotionCode::
-            when($orderBy, function($query) use($orderBy, $typeSort)
+        $codeList = PromotionCode::with(['promotion' => function($query)
+            {
+                $query->select('id', 'name');
+            }])
+            ->when($orderBy, function($query) use($orderBy, $typeSort)
                 {
                     //Sap xep theo ten cot va kieu sap xep duoc truyen len
                     $query->orderBy($orderBy, $typeSort);
@@ -60,7 +63,23 @@ class PromotionCodeController extends Controller
      */
     public function store(Request $request)
     {
-        
+        $pcode = new PromotionCode();
+
+        //Kiem tra nguoi dung co nhap code vao khong
+        if(!$request->has('code')){
+            //Neu khong thi tu generate ra 1 ma unique
+            $pcode->code = PromotionCode::codeGenerate();
+        }else{
+            //Neu co thi lay gia tri tu nhap
+            // $pcode->code = str_replace(" ",'',strtoupper($request->code));
+            $pcode->code = PromotionCode::codeGenerate(strlen($request->code), $request->code);
+        }
+        $pcode->actived = $request->actived;
+        $pcode->value = $request->value;
+        $pcode->type = $request->type;
+        $pcode->promotion_id = $request->promotion_id;
+        $pcode->save();
+        // return response()->json($pcode);
     }
 
     /**
@@ -69,9 +88,10 @@ class PromotionCodeController extends Controller
      * @param  \App\PromotionCode  $promotionCode
      * @return \Illuminate\Http\Response
      */
-    public function show(PromotionCode $promotionCode)
+    public function show($id)
     {
-        //
+        $pcode = PromotionCode::findOrFail($id);
+        return response()->json($pcode);
     }
 
     /**
