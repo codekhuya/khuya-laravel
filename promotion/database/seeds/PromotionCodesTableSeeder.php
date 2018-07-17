@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Seeder;
+use App\Promotion;
 
 class PromotionCodesTableSeeder extends Seeder
 {
@@ -11,6 +12,6 @@ class PromotionCodesTableSeeder extends Seeder
      */
     public function run()
     {
-        factory(App\PromotionCode::class, 300)->create();
+        factory(App\PromotionCode::class, Promotion::inRandomOrder()->first()->amount)->create();
     }
 }

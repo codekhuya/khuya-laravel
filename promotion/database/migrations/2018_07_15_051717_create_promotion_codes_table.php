@@ -15,10 +15,10 @@ class CreatePromotionCodesTable extends Migration
     {
         Schema::create('promotion_codes', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('code');
+            $table->string('code')->unique();
             $table->integer('value');
-            $table->string('type');
-            $table->boolean('actived');
+            $table->boolean('type')->default(1);
+            $table->boolean('actived')->default(1);
             $table->unsignedInteger('promotion_id');
             $table->foreign('promotion_id')->references('id')->on('promotions')->onDelete('cascade');
             $table->timestamps();
