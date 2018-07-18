@@ -63,6 +63,10 @@ class PromotionCodeController extends Controller
      */
     public function store(Request $request)
     {
+        $validate = PromotionCode::validator($request->all());
+        if($validate->fails()){
+            return $this->sendMessage(400, false, 'Loi xac thuc du lieu', $validate->errors());
+        }
         $pcode = new PromotionCode();
 
         //Kiem tra nguoi dung co nhap code vao khong
@@ -79,7 +83,7 @@ class PromotionCodeController extends Controller
         $pcode->type = $request->type;
         $pcode->promotion_id = $request->promotion_id;
         $pcode->save();
-        // return response()->json($pcode);
+        return $this->sendMessage(200, true, 'Luu Code thanh cong', $pcode);
     }
 
     /**

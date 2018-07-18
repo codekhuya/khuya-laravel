@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Promotion;
+use Validator;
 
 class PromotionCode extends Model
 {
@@ -11,6 +12,16 @@ class PromotionCode extends Model
     
     public function promotion(){
         return $this->belongsTo(Promotion::class);
+    }
+
+    protected function validator($data){
+        return Validator::make($data, [
+            'code' => 'unique:promotion_codes,code',
+            'actived' => 'required',
+            'value' => 'required|numeric',
+            'type' => 'required',
+            'promotion_id' => 'required',
+        ]);
     }
 
     public static function codeGenerate($length = 8, $value = null)

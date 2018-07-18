@@ -4,6 +4,8 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use App\PromotionCode;
+use Validator;
+
 class Promotion extends Model
 {
     protected $fillable = ['name', 'description', 
@@ -11,5 +13,16 @@ class Promotion extends Model
 
     public function promotionCodes(){
         return $this->hasMany(PromotionCode::class);
+    }
+
+    protected function validator($data){
+        return Validator::make($data, [
+            'name' => 'required|unique:promotions,name',
+            'started_date' => 'required',
+            'ended_date' => 'required',
+            'actived' => 'required',
+            'disposable' => 'required',
+            'amount' => 'required|numeric',
+        ]);
     }
 }

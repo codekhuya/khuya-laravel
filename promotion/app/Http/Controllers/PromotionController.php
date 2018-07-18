@@ -6,6 +6,7 @@ use App\Promotion;
 use App\PromotionCode;
 use Illuminate\Http\Request;
 
+
 class PromotionController extends Controller
 {
     /**
@@ -59,6 +60,10 @@ class PromotionController extends Controller
      */
     public function store(Request $request)
     {
+        $validate = Promotion::validator($request->all());
+        if($validate->fails()){
+            return $this->sendMessage(400, false, 'Loi xac thuc du lieu', $validate->errors());
+        }
         $promotion = new Promotion();
         
         $promotion->name = $request->name;
