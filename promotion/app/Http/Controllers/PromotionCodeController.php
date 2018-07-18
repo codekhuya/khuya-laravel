@@ -102,7 +102,7 @@ class PromotionCodeController extends Controller
      */
     public function edit(PromotionCode $promotionCode)
     {
-        //
+        
     }
 
     /**
@@ -126,5 +126,55 @@ class PromotionCodeController extends Controller
     public function destroy(PromotionCode $promotionCode)
     {
         //
+    }
+
+    /**
+     * Kiểm tra mã hợp lệ hay kh
+     *
+     * @param  \App\Promotion  $promotion
+     * @return \Illuminate\Http\Response
+     */
+    public function checkCode($inputCode){
+        try{
+            $code = PromotionCode::where('code', $inputCode)->with('promotion')->firstOrFail();
+            // return response()->json($code);
+            $now = now();
+            $now_date = str_before($now, " ");
+            $now_time = str_after($now, " ");
+            $startedTime = str_after($code->promotion->started_date, " ");
+            $endedTime = str_after($code->promotion->ended_date, " ");
+            $startedDate = str_before($code->promotion->started_date, " ");
+            $endedDate = str_before($code->promotion->ended_date, " ");
+            // return response()->json([
+            //     'now' => $now_date.' - '.$now_time,
+            //     'time' => $startedTime.' - '.$endedTime,
+            //     'date' => $startedDate .' - '. $endedDate]);
+
+            if($code->code){
+                // Kiem tra promotion_actived va code_actived co active ko;
+                if($code->actived && $code->promotion->actived){
+                    //Neu khuyen mai trong ngay
+                    //Kiem tra thoi gian khuyen mai: ngay";
+                    if(($startedDate <= $now_date && $endedDate >= $now_date)){
+                        if($now_date == $startedDate && $now_date == $endedDate){
+                            //check gio
+                            if($now_time >= $startedTime && $now_time <= $endedTime){
+                                return "Khuyen mai con vai GIO de su dung";
+                            }
+                        }
+                        return response()->json(['status' => 'OK Code','message' => 'Code con NGAY su dung']);
+                    }else{
+                        return response()->json(['status' => 'Expired Code','message' => 'Code da het han (ngay).']);
+                    }
+                }else{
+                    return response()->json('Expired Code', 'Code da het.');
+                }
+            }
+        }catch(\Exception $e){
+            return response()->json(['code' => 404, 
+            'status' => 'Note Found',
+            'message' => 'Code khong ton tai',
+            'errors' => 'Loi: '.$e->getMessage()]);
+        }
     }
 }

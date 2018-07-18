@@ -19,4 +19,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::apiResources([
     "codes" => 'PromotionCodeController',
+    "promotions" => 'PromotionController',
 ]);
+
+Route::post('/checkCode/{code}', 'PromotionCodeController@checkCode');
