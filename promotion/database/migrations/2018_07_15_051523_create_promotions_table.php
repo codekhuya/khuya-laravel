@@ -23,6 +23,7 @@ class CreatePromotionsTable extends Migration
             $table->boolean('disposable')->default(0); //True khi Code chi dung 1 lan
             $table->integer('amount')->default(-1);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

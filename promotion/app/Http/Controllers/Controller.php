@@ -16,7 +16,7 @@ class Controller extends BaseController
             'code' => $code,
             'status' => $status,
             'message' => $message,
-            'data' => $data->toArray(),
+            'data' => $data,
         ];
         return response()->json($response, $code);
     }

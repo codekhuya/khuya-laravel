@@ -83,7 +83,7 @@ class PromotionCodeController extends Controller
         $pcode->type = $request->type;
         $pcode->promotion_id = $request->promotion_id;
         $pcode->save();
-        return $this->sendMessage(200, true, 'Luu Code thanh cong', $pcode);
+        return $this->sendMessage(200, true, 'Save success.', $pcode);
     }
 
     /**
@@ -94,8 +94,12 @@ class PromotionCodeController extends Controller
      */
     public function show($id)
     {
-        $pcode = PromotionCode::findOrFail($id);
-        return response()->json($pcode);
+        try{
+            $pcode = PromotionCode::withTrashed()->findOrFail($id);
+            return $this->sendMessage(200, true, 'Send data successful.', $pcode);
+        }catch(\Exception $e){
+            return $this->sendMessage(404, false, 'Code not found.', $e->getMessage());
+        }
     }
 
     /**
@@ -116,9 +120,9 @@ class PromotionCodeController extends Controller
      * @param  \App\PromotionCode  $promotionCode
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, PromotionCode $promotionCode)
+    public function update($id)
     {
-        //
+        
     }
 
     /**
@@ -127,13 +131,19 @@ class PromotionCodeController extends Controller
      * @param  \App\PromotionCode  $promotionCode
      * @return \Illuminate\Http\Response
      */
-    public function destroy(PromotionCode $promotionCode)
+    public function destroy($id)
     {
-        //
+        try{
+            $code = PromotionCode::findOrFail($id);
+            $code->delete();
+            return $this->sendMessage(200, true, 'Delete successfull.');
+        }catch(\Exception $e){
+            return $this->sendMessage(400, false, 'Code not found.', $e->getMessage());
+        }
     }
 
     /**
-     * Kiểm tra mã hợp lệ hay kh
+     * Kiểm tra mã hợp lệ hay khong
      *
      * @param  \App\Promotion  $promotion
      * @return \Illuminate\Http\Response
@@ -149,10 +159,6 @@ class PromotionCodeController extends Controller
             $endedTime = str_after($code->promotion->ended_date, " ");
             $startedDate = str_before($code->promotion->started_date, " ");
             $endedDate = str_before($code->promotion->ended_date, " ");
-            // return response()->json([
-            //     'now' => $now_date.' - '.$now_time,
-            //     'time' => $startedTime.' - '.$endedTime,
-            //     'date' => $startedDate .' - '. $endedDate]);
 
             if($code->code){
                 // Kiem tra promotion_actived va code_actived co active ko;
@@ -179,6 +185,25 @@ class PromotionCodeController extends Controller
             'status' => 'Note Found',
             'message' => 'Code khong ton tai',
             'errors' => 'Loi: '.$e->getMessage()]);
+        }
+    }
+
+
+    public function codeGenerate2($length = 8, $value = null)
+    {
+        $existedCode = PromotionCode::pluck('code')->all();
+        $pool = str_replace(" ", '', strtoupper(str_random($length)));
+        if(is_null($value)){
+            for($i=0; $i < strlen($existedCode);$i++){
+                if($pool === $existedCode[i]){
+                    $pool = str_replace(" ", '', strtoupper(str_random($length)));
+                    break;
+                }
+            }  
+            return $pool;
+        }else{
+            $pool = str_replace(" ", '', strtoupper($value));
+            return $pool;
         }
     }
 }

@@ -21,7 +21,7 @@ class PromotionController extends Controller
         $sort = request()->input('sort');
         $limit = request()->input('limit');
 
-        $promotions = Promotion::with('promotionCodes')->
+        $promotions = Promotion::with('promotionCodes')->withCount('promotionCodes')->
             when($order, function($query) use($order, $sort)
             {
                 $query->orderBy($order, $sort);
@@ -73,37 +73,43 @@ class PromotionController extends Controller
         $promotion->actived = $request->actived;
         $promotion->disposable = $request->disposable;
         
-        //Kiem tra neu code khong su dung 1 lan
-        if(!$promotion->disposable){
-            $promotion->amount = $request->amount;
-            $promotion->save();
-
-            $i = 0;
-            while($i < $promotion->amount){
-                //Neu co so luong code thi tu dong sinh ma code
+        try{
+            //Kiem tra neu code khong su dung 1 lan
+            if(!$promotion->disposable){
+                $promotion->amount = $request->amount;
+                $promotion->save();
+    
+                $i = 0;
+                while($i < $promotion->amount){
+                    //Neu co so luong code thi tu dong sinh ma code
+                    $code = new PromotionCode();
+                    $code->promotion_id = $promotion->id;
+                    $code->code = $code->codeGenerate();
+                    $code->value = $request->value;
+                    $code->type = $request->type;
+                    $code->actived = 1;
+                    $code->save();
+                    // $promotion->promotionCodes()->create($code);
+                    $i++;
+                }
+            }else{
+                $promotion->amount = -1;
+                $promotion->save();
+    
                 $code = new PromotionCode();
                 $code->promotion_id = $promotion->id;
-                $code->code = $code->codeGenerate();
+                $code->code = $code->codeGenerate(strlen($request->code), $request->code);
                 $code->value = $request->value;
                 $code->type = $request->type;
                 $code->actived = 1;
                 $code->save();
-                // $promotion->promotionCodes()->create($code);
-                $i++;
             }
-        }else{
-            $promotion->amount = -1;
-            $promotion->save();
-
-            $code = new PromotionCode();
-            $code->promotion_id = $promotion->id;
-            $code->code = $code->codeGenerate(strlen($request->code), $request->code);
-            $code->value = $request->value;
-            $code->type = $request->type;
-            $code->actived = 1;
-            $code->save();
+            return $this->sendMessage(200, true, 'Send data successful.', 
+                $promotion->with('promotionCodes')->withCount('promotionCodes')->find($promotion->id));
+            
+        }catch(Exception $e){
+            return $this->sendMessage(400, true, 'Error chi khong co bit.', $e->getMessage());
         }
-        return response()->json($promotion->with('promotionCodes')->find($promotion->id));
     }
 
     /**
@@ -114,8 +120,12 @@ class PromotionController extends Controller
      */
     public function show($id)
     {
-        $proList = Promotion::findOrFail($id);
-        return response()->json($proList);
+        try{
+            $proList = Promotion::withTrashed()->withCount('promotionCodes')->findOrFail($id);
+            return $this->sendMessage(200, true, 'Send data successful.', $proList);
+        }catch(\Exception $e){
+            return $this->sendMessage(404, false, 'Not found.', $e->getMessage());
+        }
     }
 
     /**
@@ -136,9 +146,18 @@ class PromotionController extends Controller
      * @param  \App\Promotion  $promotion
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Promotion $promotion)
+    public function update($id)
     {
-        //
+        try{
+            $promo = Promotion::findOrFail($id);
+            $input = request()->all();
+            if($promo){
+                $promo->update($input);
+                return $this->sendMessage(200, true, 'Update Success', $promo);
+            }
+        }catch(\Exception $e){
+            return $this->sendMessage(404, false, "Not Found", $e->getMessage());
+        }
     }
 
     /**
@@ -147,25 +166,14 @@ class PromotionController extends Controller
      * @param  \App\Promotion  $promotion
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Promotion $promotion)
+    public function destroy($id)
     {
-        //
+        try{
+            $code = Promotion::findOrFail($id);
+            $code->delete();
+            return $this->sendMessage(200, true, 'Delete successfull.');
+        }catch(\Exception $e){
+            return $this->sendMessage(400, false, 'Promotion not found.', $e->getMessage());
+        }
     }
-
-    /**
-     * Kiểm tra mã hợp lệ hay kh
-     *
-     * @param  \App\Promotion  $promotion
-     * @return \Illuminate\Http\Response
-     */
-    // public function checkCode($code){
-    //     $promotion = Promotion::where('actived', 1)
-    //     ->with(['promotionCodes' => function($query) use($code)
-    //         {
-    //             $query->where('code', $code)
-    //                 ->where('actived', 1);
-    //         }
-    //     ])->get();
-    //     return response()->json($promotion);
-    // }
 }
