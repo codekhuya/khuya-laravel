@@ -22,6 +22,6 @@ Route::apiResources([
     "promotions" => 'PromotionController',
 ]);
 
-Route::post('/checkCode/{code}', 'PromotionCodeController@checkCode');
+Route::post('/checkCode', 'PromotionCodeController@checkCode');
 Route::post('/codeGenerate2/{value}', 'PromotionCodeController@codeGenerate2');
 // Route::post('/delete/{code}', 'PromotionCodeController@destroy');

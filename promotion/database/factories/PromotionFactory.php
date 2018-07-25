@@ -13,6 +13,5 @@ $factory->define(App\Promotion::class, function (Faker $faker) {
         'ended_date' => $faker->dateTimeInInterval($startDate = 'now', $interval = '+ '.$days.' days', $timezone = null),
         'actived' => $faker->randomElement($array = array (true,false)),
         'disposable' => $faker->randomElement($array = array (true,false)),
-        'amount' => $faker->optional($weight = 0.4, $default = -1)->numberBetween($min = 1, $max = 99),
     ];
 });

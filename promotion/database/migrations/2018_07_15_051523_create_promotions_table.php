@@ -16,12 +16,11 @@ class CreatePromotionsTable extends Migration
         Schema::create('promotions', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name')->unique();
-            $table->text('description');
+            $table->text('description')->default(null);
             $table->dateTime('started_date');
             $table->dateTime('ended_date');
             $table->boolean('actived')->default(1);
             $table->boolean('disposable')->default(0); //True khi Code chi dung 1 lan
-            $table->integer('amount')->default(-1);
             $table->timestamps();
             $table->softDeletes();
         });

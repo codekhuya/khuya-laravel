@@ -16,30 +16,31 @@ class PromotionController extends Controller
      */
     public function index()
     {
-        $keyword = request()->input('keyword');
-        $order = request()->input('order');
-        $sort = request()->input('sort');
-        $limit = request()->input('limit');
-
-        $promotions = Promotion::with('promotionCodes')->withCount('promotionCodes')->
-            when($order, function($query) use($order, $sort)
-            {
-                $query->orderBy($order, $sort);
-            },
-            function($query)
-            {
-                $query->orderBy('id','desc');
-            }
-        )
-        ->when($keyword, function($query, $keyword)
-            {
-                $query->where('name', 'like', "%$keyword%")
-                    ->orWhere('description', 'like', "%$keyword%")
-                    ->orWhere('started_date', 'like',"%$keyword%")
-                    ->orWhere('ended_date', 'like', "%$keyword%");
-            })
-        ->paginate($limit);
-        return response()->json($promotions);
+        try{
+            $keyword = request()->input('keyword');
+            $orderBy = request()->input('orderBy');
+            $typeSort = request()->input('typeSort');
+            $limit = request()->input('limit', 9);
+    
+            $promotions = Promotion::withCount('promotionCodes')
+            ->when($orderBy, function($query) use($orderBy, $typeSort)
+                {
+                    $query->orderBy($orderBy, $typeSort);
+                },
+                function($query)
+                {
+                    $query->orderBy('id','desc');
+                }
+            )
+            ->when($keyword, function($query, $keyword)
+                {
+                    $query->where('name', 'like', "%$keyword%");
+                })
+            ->paginate($limit);
+            return $this->sendMessage("success", 'Send data successful.', $promotions, 200);
+        }catch(\Exception $e){
+            return $this->sendMessage("failed", 'Server busy. Please try again.', $e->getMessage(), 502);
+        }
     }
 
     /**
@@ -60,55 +61,24 @@ class PromotionController extends Controller
      */
     public function store(Request $request)
     {
-        $validate = Promotion::validator($request->all());
-        if($validate->fails()){
-            return $this->sendMessage(400, false, 'Loi xac thuc du lieu', $validate->errors());
-        }
-        $promotion = new Promotion();
-        
-        $promotion->name = $request->name;
-        $promotion->description = $request->description;
-        $promotion->started_date = (string)$request->started_date;
-        $promotion->ended_date = (string)$request->ended_date;
-        $promotion->actived = $request->actived;
-        $promotion->disposable = $request->disposable;
-        
         try{
-            //Kiem tra neu code khong su dung 1 lan
-            if(!$promotion->disposable){
-                $promotion->amount = $request->amount;
-                $promotion->save();
-    
-                $i = 0;
-                while($i < $promotion->amount){
-                    //Neu co so luong code thi tu dong sinh ma code
-                    $code = new PromotionCode();
-                    $code->promotion_id = $promotion->id;
-                    $code->code = $code->codeGenerate();
-                    $code->value = $request->value;
-                    $code->type = $request->type;
-                    $code->actived = 1;
-                    $code->save();
-                    // $promotion->promotionCodes()->create($code);
-                    $i++;
-                }
-            }else{
-                $promotion->amount = -1;
-                $promotion->save();
-    
-                $code = new PromotionCode();
-                $code->promotion_id = $promotion->id;
-                $code->code = $code->codeGenerate(strlen($request->code), $request->code);
-                $code->value = $request->value;
-                $code->type = $request->type;
-                $code->actived = 1;
-                $code->save();
+            $validate = Promotion::validator($request->all());
+            if($validate->fails()){
+                return $this->sendMessage("failed", 'Input Invalid', $validate->errors(), 400);
             }
-            return $this->sendMessage(200, true, 'Send data successful.', 
-                $promotion->with('promotionCodes')->withCount('promotionCodes')->find($promotion->id));
+            $promotion = new Promotion();
+            
+            $promotion->name = $request->name;
+            $promotion->description = $request->description ?? null;
+            $promotion->started_date = $request->started_date ." ". $request->started_time;
+            $promotion->ended_date = $request->ended_date ." ". $request->ended_time;
+            $promotion->actived = $request->actived ?? 1;
+            $promotion->disposable = $request->disposable ?? 0;
+            $promotion->save();
+            return $this->sendMessage("success", 'Send Data Successful.', $promotion, 200);
             
         }catch(Exception $e){
-            return $this->sendMessage(400, true, 'Error chi khong co bit.', $e->getMessage());
+            return $this->sendMessage("failed", 'Unable to create. Please try again.', $e->getMessage(), 502);
         }
     }
 
@@ -122,9 +92,9 @@ class PromotionController extends Controller
     {
         try{
             $proList = Promotion::withTrashed()->withCount('promotionCodes')->findOrFail($id);
-            return $this->sendMessage(200, true, 'Send data successful.', $proList);
+            return $this->sendMessage("success", 'Send Data Successful.', $proList, 200);
         }catch(\Exception $e){
-            return $this->sendMessage(404, false, 'Not found.', $e->getMessage());
+            return $this->sendMessage('failed', 'Promotion Not Found.', $e->getMessage(), 404);
         }
     }
 
@@ -149,14 +119,22 @@ class PromotionController extends Controller
     public function update($id)
     {
         try{
-            $promo = Promotion::findOrFail($id);
             $input = request()->all();
-            if($promo){
-                $promo->update($input);
-                return $this->sendMessage(200, true, 'Update Success', $promo);
+            $promotion = Promotion::findOrFail($id);
+            $validate = Promotion::validator($input);
+            if($validate->fails()){
+                return $this->sendMessage("failed", 'Input Invalid', $validate->errors(), 400);
             }
+            $promotion->name = $input['name'];
+            $promotion->description = $input['description'] ?? null;
+            $promotion->started_date = $input['started_date'] ." ". $input['started_time'];
+            $promotion->ended_date = $input['ended_date'] ." ". $input['ended_time'];
+            $promotion->actived = $input['actived'];
+            $promotion->disposable = $input['disposable'];
+            $promotion->save();
+            return $this->sendMessage("success", 'Update Successful.', $promotion, 200);
         }catch(\Exception $e){
-            return $this->sendMessage(404, false, "Not Found", $e->getMessage());
+            return $this->sendMessage('failed', 'Promotion Not Found.', $e->getMessage(), 404);
         }
     }
 
@@ -169,11 +147,11 @@ class PromotionController extends Controller
     public function destroy($id)
     {
         try{
-            $code = Promotion::findOrFail($id);
-            $code->delete();
-            return $this->sendMessage(200, true, 'Delete successfull.');
+            $promotion = Promotion::findOrFail($id);
+            $promotion->delete();
+            return $this->sendMessage("success", 'Delete Successful.', $promotion, 200);
         }catch(\Exception $e){
-            return $this->sendMessage(400, false, 'Promotion not found.', $e->getMessage());
+            return $this->sendMessage('Failed', 'Promotion Not Found.', $e->getMessage(), 404);
         }
     }
 }

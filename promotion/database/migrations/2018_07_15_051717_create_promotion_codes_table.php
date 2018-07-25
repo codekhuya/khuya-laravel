@@ -22,7 +22,6 @@ class CreatePromotionCodesTable extends Migration
             $table->unsignedInteger('promotion_id');
             $table->foreign('promotion_id')->references('id')->on('promotions')->onDelete('cascade');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

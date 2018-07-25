@@ -11,7 +11,7 @@ class Promotion extends Model
 {
     use SoftDeletes;
     protected $fillable = ['name', 'description', 
-    'started_date', 'ended_date', 'actived', 'disposable', 'amount'];
+    'started_date', 'ended_date', 'actived', 'disposable',];
 
     public function promotionCodes(){
         return $this->hasMany(PromotionCode::class);
@@ -20,11 +20,11 @@ class Promotion extends Model
     protected function validator($data){
         return Validator::make($data, [
             'name' => 'required|unique:promotions,name',
+            'description' => 'required',
             'started_date' => 'required',
             'ended_date' => 'required',
             'actived' => 'required',
             'disposable' => 'required',
-            'amount' => 'required|numeric',
         ]);
     }
 }
