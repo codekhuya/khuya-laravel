@@ -16,3 +16,8 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// route to show the login form
+Route::get('login', array(['user'=>'HomeController@showlogin']));
+// route to process the form
+Route::post('login', array(['user'=>'HomeController@doLogin']));
