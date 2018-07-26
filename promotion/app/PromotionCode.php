@@ -14,14 +14,19 @@ class PromotionCode extends Model
         return $this->belongsTo(Promotion::class);
     }
 
-    protected function validator($data){
-        return Validator::make($data, [
+    protected function validator($data, $bonus_rules = null){
+        $default = [
             'code' => 'unique:promotion_codes,code',
             'actived' => 'required',
             'value' => 'required|numeric',
             'type' => 'required',
             'promotion_id' => 'required|exists:promotions,id',
-        ]);
+        ];
+        if($bonus_rules != null){
+            //Neu co them dieu kien validate thi them vao $default de kiem tra
+            $default = array_merge($default, $bonus_rules);
+        }
+        return Validator::make($data, $default);
     }
 
     public static function codeGenerate($length = 8, $value = null)

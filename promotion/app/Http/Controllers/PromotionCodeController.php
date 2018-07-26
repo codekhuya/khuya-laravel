@@ -68,7 +68,7 @@ class PromotionCodeController extends Controller
     {
         try{
             $input = request()->all();
-            $validate = PromotionCode::validator($input);
+            $validate = PromotionCode::validator($input, ['codes_amount'=>'required']);
             if($validate->fails()){
                 return $this->sendMessage("failed", 'Input Invalid', $validate->errors(), 400);
             }
